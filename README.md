@@ -2,17 +2,52 @@
 
 **Replace learned AI behaviors with geometric primitives.**
 
-φ-Rules is a framework for discovering and applying transformation rules using φ-geometric gate functions instead of neural networks. Given input-output examples, the system automatically detects which features matter, discovers context-dependent selectors via information gain, and composes rules through a multi-phase pipeline — all using the mathematics of the golden ratio.
+> ```
+> EN:  The bright light shone right there in the night.
+> IPA: θɛ bɹaɪt laɪt ʃoʊn ɹaɪt θɛɹ ɪn θɛ naɪt.
+>
+> EN:  Some love to dance but none have a choice in the voice.
+> IPA: sʌm lʌv tɒ dæns bʌt nʌn hæv æ ʧɒɪs ɪn θɛ vɒɪs.
+>
+> EN:  I hope to make a fine cake and ride home in time.
+> IPA: ɪ hoʊp tɒ meɪk æ faɪn keɪk ænd ɹaɪd hoʊm ɪn taɪm.
+>
+> EN:  I think the prince sat on the fence and drank his drink.
+> IPA: ɪ θɪŋk θɛ pɹɪns sæt ɒn θɛ fɛns ænd dɹæŋk hɪs dɹɪŋk.
+> ```
+> *29 rules. 159 geometric primitives. No neural network. No training.*
+> *Structure IS the computation.*
 
-No training. No gradient descent. No weights. Structure IS the computation.
+φ-Rules is a framework for discovering and applying transformation rules using φ-geometric gate functions instead of neural networks. Given input-output examples, the system automatically detects which features matter, discovers context-dependent selectors via information gain, and composes rules through a multi-phase pipeline — all using the mathematics of the golden ratio.
 
 ---
 
-## The Core Idea
+## The Geometric Primitives
 
-Neural networks learn transformation rules by adjusting millions of parameters through gradient descent. But the "intelligence" isn't in the weights — it's in the **shape** those weights create. If we identify the right geometric primitives, we can build the same transformations directly.
+Everything in φ-Rules is built from **three atoms** — STEP, RECT, and RAMP — all derived from a single nonlinearity: the Ideal Gate.
 
-φ-Rules proves this by replacing the entire learn-from-data pipeline with three geometric building blocks:
+![Geometric ALU: Every operation built from STEP · RECT · RAMP + Ideal Gate](images/geometric_alu.png)
+
+From these three primitives, we construct: logic gates (AND, OR, XOR, NOT), comparison operators, MAX/MIN, ABS/CLAMP, integer multiplication (289/289 correct), modulo, division, and letter detection — a complete **geometric ALU** with zero trained parameters.
+
+### String Transforms: Structure IS Information
+
+The same primitives that build an ALU also build string transformations. Here's uppercase → lowercase conversion, where every weight is derived from the problem geometry — nothing trained:
+
+![Geometric Uppercase→Lowercase: Every weight derived from problem geometry](images/geometric_uppercase.png)
+
+The key insight visible in these charts:
+
+- **Top-left**: The geometric converter learns a piecewise-linear function that maps A-Z (65-90) down by 32 to a-z (97-122) while leaving everything else unchanged
+- **Middle-left**: A single RECT pair (width 26, height 32) does the job — it activates precisely in the uppercase range
+- **Bottom-left**: The 3 geometric primitives (STEP, RECT, RAMP) that build everything
+- **Top-right**: 4 hidden neurons, each a threshold detector at a different boundary, combine to form the RECT
+
+The tolower conversion needs **12 parameters and 4 hidden neurons**. The IPA conversion uses the same architecture scaled up to **159 gate_step calls across 29 rules** — same math, more rules, automatically discovered.
+
+---
+
+## How Rules Are Learned
 
 ### 1. The Gate Function
 
@@ -38,9 +73,9 @@ output = input + height × gate_step(input, ord('a'), φ²)
 
 Rules compose **additively** — stacking RECT pairs builds arbitrary piecewise transformations.
 
-### 2. Automatic Context Detection
+### 2. Automatic Feature Detection
 
-When the same input produces different outputs depending on context (like English 'c' → /k/ before 'a' but → /s/ before 'e'), the framework automatically discovers which context variable explains the variation.
+When the same input produces different outputs depending on context (like English 'c' → /k/ before 'a' but → /s/ before 'e'), the framework **automatically discovers** which context variable explains the variation.
 
 The algorithm uses **information gain** (entropy reduction) to rank candidate context variables:
 
@@ -97,33 +132,20 @@ This architecture wasn't designed top-down — it was **discovered** by asking w
 
 ---
 
-## Demonstration: English → IPA
+## The IPA Demonstration
 
 The included demo applies the framework to English-to-IPA (International Phonetic Alphabet) transcription — a task that typically requires either hand-crafted rule engines or trained sequence-to-sequence models.
 
-```
-EN:  The bright light shone right there in the night.
-IPA: θɛ bɹaɪt laɪt ʃoʊn ɹaɪt θɛɹ ɪn θɛ naɪt.
-
-EN:  Some love to dance but none have a choice in the voice.
-IPA: sʌm lʌv tɒ dæns bʌt nʌn hæv æ ʧɒɪs ɪn θɛ vɒɪs.
-
-EN:  The gentle giant gave a gift to the girl and got the gem.
-IPA: θɛ ʒɛntl ʒaɪænt geɪv æ gɪft tɒ θɛ gɪɹl ænd gɒt θɛ ʒɛm.
-```
-
-### What the demo discovers
+### What the demo discovers from examples
 
 | Phase | What | How many | Method |
 |-------|------|----------|--------|
 | 0 | Magic-e, igh trigraph, silent final e | 5 trained vowel rules (4 geared) | Scan-ahead feature extraction |
 | 1 | sh→ʃ, th→θ, ng→ŋ, ch→ʧ, ee→iː, etc. | 13 patterns (4 frozen) | Structural collapse |
-| 2 | c→k/s, g→g/j, y→j/i | 3 rules (1 two-level gear) | Auto context detection |
+| 2 | c→k/s, g→g/j, y→j/i | 3 rules (1 two-level gear) | Auto feature detection |
 | 3 | a→æ, e→ɛ, i→ɪ, o→ɒ, u→ʌ, j→ʒ, r→ɹ | 7 substitutions | Additive RECT pairs |
 
-**29 rules. 159 geometric primitives. 84/84 test accuracy.**
-
-The demo runs as 24 progressive lessons — each one teaches an IPA concept while the explanation text itself transforms as rules accumulate, so you can watch the geometric program grow.
+The demo runs as **24 progressive lessons** — each one teaches an IPA concept while the explanation text itself transforms as rules accumulate, so you can watch the geometric program grow in real-time.
 
 ---
 
@@ -147,7 +169,7 @@ python ipa_demo.py
 python ipa_demo.py --interactive
 ```
 
-### Run the test suite (84/84)
+### Run the test suite
 
 ```bash
 python ipa_demo.py --test
@@ -206,10 +228,11 @@ phi_rules/
 ├── LICENSE
 ├── requirements.txt
 ├── .gitignore
-├── ipa_demo.py                  # IPA demonstration (24 lessons + interactive mode)
-├── auto_context_detection.py    # Core framework: context detection, gear-shift, rule building
-└── tests/
-    └── test_ipa.py              # 84 test cases across all rule types
+├── images/
+│   ├── geometric_alu.png           # Geometric ALU visualization
+│   └── geometric_uppercase.png     # String conversion visualization
+├── ipa_demo.py                     # IPA demonstration (24 lessons + interactive mode)
+└── auto_context_detection.py       # Core framework: context detection, gear-shift, rule building
 ```
 
 ## Requirements
